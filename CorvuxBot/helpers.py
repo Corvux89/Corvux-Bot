@@ -1,8 +1,10 @@
 import datetime
+from itertools import islice
+from typing import List
 
 import discord.errors
+from discord import TextChannel, Bot, CategoryChannel, ApplicationContext
 from discord.ext.commands import Context
-
 from CorvuxBot.contants import *
 
 
@@ -32,6 +34,19 @@ def load(self, ext):
     return True, f'{ext} loaded.'
 
 
+def get_excluded_channels(self, bot: Bot) -> List[TextChannel]:
+    category: CategoryChannel = bot.get_channel(self.channel.category_id)
+    if category is not None:
+        return EXCLUDED_CHANNElS.get(category.id)
+    return []
+
+
 async def cog_log(ctx: Context):  # Log commands being run to better tie them to errors
     print(f"{datetime.datetime.now()}: Command [ /{ctx.command.qualified_name} ] initiated by member "
           f"[ {ctx.author.name}#{ctx.author.discriminator}, id: {ctx.author.id} ]")
+
+
+def split_dict(data, SIZE=10000):
+    it = iter(data)
+    for i in range(0, len(data), SIZE):
+        yield {k:data[k] for k in islice(it, SIZE)}

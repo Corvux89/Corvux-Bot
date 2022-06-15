@@ -24,6 +24,7 @@ class PlayerAdmin(commands.Cog):
     async def cog_before_invoke(ctx: Context):
         await cog_log(ctx)
 
+    # Command: create
     @commands.slash_command(name="create",
                             description="Create a new character")
     async def create_character(self,
@@ -50,8 +51,9 @@ class PlayerAdmin(commands.Cog):
 
         if self.bot.characters.get_character_from_id(player.id) is not None:
             print(f'Found existing character for {player.id}. Aborting.')
-            await ctx.respond(embed=ErrorEmbed(description=f'Player {player.mention} already has a character. Do something else.'),
-                              ephemeral=True)
+            await ctx.respond(
+                embed=ErrorEmbed(description=f'Player {player.mention} already has a character. Do something else.'),
+                ephemeral=True)
             return
         else:
             new_character = Character(player.id,
@@ -74,13 +76,14 @@ class PlayerAdmin(commands.Cog):
             end = time.time()
             print(f'Time to create character: {end - start}s')
 
+    # Command: get
     @commands.slash_command(name="get",
                             description="Gets a characters information")
     async def getCharacter(self,
                            ctx: ApplicationContext,
                            player: Option(Member,
                                           "Player to get the information of",
-                                          required=False,)):
+                                          required=False, )):
 
         if player is None:
             player = ctx.author
@@ -93,4 +96,4 @@ class PlayerAdmin(commands.Cog):
                               ephemeral=True)
             return
         else:
-            await ctx.respond(embed=GetEmbed(character,player), ephemeral=False)
+            await ctx.respond(embed=GetEmbed(character, player), ephemeral=False)
