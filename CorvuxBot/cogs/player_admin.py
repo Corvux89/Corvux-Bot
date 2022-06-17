@@ -1,12 +1,16 @@
+import logging
 import discord
 import time
-from discord import ApplicationContext, Option, Member, Embed
+from discord import Option, Member, Embed
+from discord.ext.commands import Context
 from CorvuxBot.bot import CorvuxBot
 from CorvuxBot.helpers import *
 from discord.ext import commands
 from CorvuxBot.models.embeds import ErrorEmbed, GetEmbed
 from CorvuxBot.models.characters import Character
 from CorvuxBot.category_ref import CharacterClass
+
+log = logging.getLogger(__name__)
 
 
 def setup(bot):
@@ -18,11 +22,11 @@ class PlayerAdmin(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        print(f'Cog \'Player_Admin\' loaded')
+        log.info(f'Cog \'player_admin\' loaded')
 
     @staticmethod
     async def cog_before_invoke(ctx: Context):
-        await cog_log(ctx)
+        await cog_log(ctx, log)
 
     # Command: create
     @commands.slash_command(name="create",
@@ -50,7 +54,7 @@ class PlayerAdmin(commands.Cog):
         await ctx.response.defer(ephemeral=True)
 
         if self.bot.characters.get_character_from_id(player.id) is not None:
-            print(f'Found existing character for {player.id}. Aborting.')
+            log.error(f'Found existing character for {player.id}. Aborting.')
             await ctx.respond(
                 embed=ErrorEmbed(description=f'Player {player.mention} already has a character. Do something else.'),
                 ephemeral=True)
@@ -74,7 +78,7 @@ class PlayerAdmin(commands.Cog):
 
             await ctx.respond(embed=embed)
             end = time.time()
-            print(f'Time to create character: {end - start}s')
+            log.info(f'Time to create character: {end - start}s')
 
     # Command: get
     @commands.slash_command(name="get",
@@ -91,7 +95,7 @@ class PlayerAdmin(commands.Cog):
         await ctx.response.defer()
 
         if (character := self.bot.characters.get_character_from_id(player.id)) is None:
-            print(f'No character information found for player [ {player.id} ]. Aborting.')
+            log.error(f'No character information found for player [ {player.id} ]. Aborting.')
             await ctx.respond(embed=ErrorEmbed(description=f'No character information found for {player.mention}'),
                               ephemeral=True)
             return

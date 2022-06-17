@@ -2,6 +2,7 @@ import enum
 from typing import List
 from discord import OptionChoice
 
+
 class CommandOptionEnum(enum.Enum):
 
     @classmethod
@@ -11,6 +12,7 @@ class CommandOptionEnum(enum.Enum):
     @classmethod
     def values_list(cls) -> List[str]:
         return list(map(lambda v: v.value, cls))
+
 
 class CharacterClass(CommandOptionEnum):
     ARTIFICER = 'Artificer'

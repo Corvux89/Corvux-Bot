@@ -1,8 +1,11 @@
+import logging
+
 from CorvuxBot.sheets_client import GSheetsClient
 from CorvuxBot.category_ref import CharacterClass
 from time import perf_counter
 from typing import Optional, Dict, Any
 
+log = logging.getLogger(__name__)
 
 class Character(object):
     player_id: int
@@ -35,16 +38,14 @@ class Character(object):
 
 
 class characters(GSheetsClient):
-    sheets: GSheetsClient
 
     def __init__(self):
         super(characters, self).__init__()
-        self.sheets = GSheetsClient
 
         start = perf_counter()
         self.char_sheet = self.corvux_workbook.worksheet("Characters")
         end = perf_counter()
-        print(f'Time to load character sheet: {end - start}s')
+        log.info(f'Time to load character sheet: {end - start}s')
 
     def get_character_from_id(self, member_id: int | str) -> Optional[Character]:
         if isinstance(member_id, int):
@@ -69,7 +70,7 @@ class characters(GSheetsClient):
             character.level
         ]
 
-        print(f'Appending new character to sheet with data {character_data}')
+        log.info(f'Appending new character to sheet with data {character_data}')
         self.char_sheet.append_row(character_data,
                                    value_input_option='USER_ENTERED',
                                    insert_data_option="INSERT_ROWS",

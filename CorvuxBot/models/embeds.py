@@ -1,10 +1,11 @@
+import logging
 from typing import Dict
-
 import discord.utils
 from discord import Embed, Color, Member
-
-from CorvuxBot.helpers import split_dict
+from CorvuxBot.constants import *
 from CorvuxBot.models.characters import Character
+
+log = logging.getLogger(__name__)
 
 
 class ErrorEmbed(Embed):
@@ -30,38 +31,33 @@ class dashboard_embed(Embed):
     def __init__(self, channel_statuses: Dict[str, str], category_name: str):
         super(dashboard_embed, self).__init__(color=Color.dark_grey(),
                                               title=f'Channel Statuses - {category_name}',
-                                              description="<:white_check_mark:983576747381518396> = Channel available\n"
-                                                          "<:x:983576786447245312> = Channel in use\n"
-                                                          "<:bookmark:986735232604598302> = Waiting for Magewright\n"
-                                                          "<:grey_question:983576825294884924> = Unknown. Check the channel for more details",
+                                              description=f"{WHITE_CHECK} = Channel available\n"
+                                                          f"{RED_X} = Channel in use\n"
+                                                          f"{BOOKMARK} = Waiting for Magewright\n"
+                                                          f"{GREY_QUESTION} = Unknown. Check the channel for more details",
                                               timestamp=discord.utils.utcnow())
 
-        #TODO: Split channel_statuses into chunks of 20 to handle large categories
-
-        # vals = dict()
-        # for test in split_dict(channel_statuses,20):
-        #     vals.add(test)
-
+        # TODO: Can we optimize this for mobile to get around discord bug?
         channels = ""
         statuses = ""
+        counter = 0
+        maxUpdates = len(channel_statuses)
 
         for k in channel_statuses.keys():
+            counter += 1
             channels += f'{k}\n'
             statuses += f'\u200B \u200B \u200B \u200B \u200B {channel_statuses[k]}\n'
 
-        self.add_field(name="Channel", value=channels, inline=True)
-        self.add_field(name="Available", value=statuses, inline=True)
-
-        if secondary_statuses is not None:
-            self.add_field(name="\u200B", value="\u200b", inline=False)
-            channels = ""
-            statuses = ""
-
-            for k in secondary_statuses.keys():
-                channels += f'{k}\n'
-                statuses += f'\u200B \u200B \u200B \u200B \u200B {secondary_statuses[k]}\n'
-
-            self.add_field(name="Channel", value=channels, inline=True)
-            self.add_field(name="Available", value=statuses, inline=True)
+            if CHUNKS >= maxUpdates == counter:
+                self.add_field(name="Channel", value=channels, inline=True)
+                self.add_field(name="Available", value=statuses, inline=True)
+            elif counter % CHUNKS == 0:
+                self.add_field(name="Channel", value=channels, inline=True)
+                self.add_field(name="Available", value=statuses, inline=True)
+                channels = ""
+                statuses = ""
+                maxUpdates -= CHUNKS
+                counter -= CHUNKS
+                self.add_field(name="\u200B", value="\u200b", inline=False)
 
         self.set_footer(text="Last Updated")

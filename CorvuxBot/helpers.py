@@ -1,11 +1,7 @@
-import datetime
-from itertools import islice
 from typing import List
-
 import discord.errors
 from discord import TextChannel, Bot, CategoryChannel, ApplicationContext
-from discord.ext.commands import Context
-from CorvuxBot.contants import *
+from CorvuxBot.constants import *
 
 
 def is_admin(ctx):
@@ -41,12 +37,13 @@ def get_excluded_channels(self, bot: Bot) -> List[TextChannel]:
     return []
 
 
-async def cog_log(ctx: Context):  # Log commands being run to better tie them to errors
-    print(f"{datetime.datetime.now()}: Command [ /{ctx.command.qualified_name} ] initiated by member "
-          f"[ {ctx.author.name}#{ctx.author.discriminator}, id: {ctx.author.id} ]")
+# TODO: Part of logging...but do better
+async def cog_log(ctx: ApplicationContext, log):  # Log commands being run to better tie them to errors
+    try:
+        log.info(
+            "cmd: chan {0.channel} ({0.channel.id}), serv: {0.guild} ({0.guild.id}),"
+            "auth: {0.user} ({0.user.id}): {0.command}".format(ctx)
+        )
+    except AttributeError:
+        log.info("Command in PM with {0.message.author} ({0.message.author.id}): {0.message.content}.".format(ctx))
 
-
-def split_dict(data, SIZE=10000):
-    it = iter(data)
-    for i in range(0, len(data), SIZE):
-        yield {k:data[k] for k in islice(it, SIZE)}
