@@ -31,14 +31,6 @@ class CorvuxReaction(object):
 
 class reactions(GSheetsClient):
 
-    def __init__(self):
-        super(reactions,self).__init__()
-
-        start = perf_counter()
-        self.reactions_sheet = self.corvux_workbook.worksheet("Reactions and Roles")
-        end = perf_counter()
-        log.info(f'Time to load dashboard sheet: {end - start}s')
-
     def get_role_by_post_id(self, post_id: int) -> Optional[CorvuxReaction]:
         if isinstance(post_id, int):
             post_id = str(post_id)

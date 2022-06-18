@@ -1,17 +1,16 @@
 import faulthandler
 import logging
 import sys
-
 import discord
-from discord import Intents, ApplicationContext, Reaction
-from discord.ext.commands import CommandInvokeError
+
 
 from CorvuxBot.bot import CorvuxBot
 from CorvuxBot.constants import *
 from os import listdir
 from discord.ext import commands
 
-# TODO: Better command logging and command error handling.
+# TODO: SlashCommand Groups
+# TODO: Consolidate GSHEETS calls
 
 intents = discord.Intents(
     guilds=True,
@@ -27,6 +26,14 @@ intents = discord.Intents(
     presences=False,
     typing=False
 )
+
+log_formatter = logging.Formatter("%(asctime)s %(name)s: %(message)s")
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(log_formatter)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
+log = logging.getLogger("bot")
 
 desc = "I have no idea what I'm doing"
 
@@ -49,27 +56,15 @@ for filename in listdir(COGS_DIR):
 async def ping(ctx):
     await ctx.respond(f'Pong. Latency is {round(bot.latency)}ms.')
 
-
-log_formatter = logging.Formatter("%(asctime)s %(name)s: %(message)s")
-handler = logging.StreamHandler(sys.stdout)
-handler.setFormatter(log_formatter)
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logger.addHandler(handler)
-log = logging.getLogger("bot")
-
-
-@bot.event
-async def on_command(ctx: ApplicationContext):
-    print(f'here')
-
-@bot.event
-async def on_application_command_error(error,ctx):
-    print(f'here')
-
 @bot.event
 async def on_application_command(ctx):
-    print(f'COMMANDY COMMAN')
+    try:
+        log.info(
+            "cmd: chan {0.channel} ({0.channel.id}), serv: {0.guild} ({0.guild.id}),"
+            "auth: {0.user} ({0.user.id}): {0.command}".format(ctx)
+        )
+    except AttributeError:
+        log.info("Command in PM with {0.message.author} ({0.message.author.id}): {0.message.content}.".format(ctx))
 
 
 @bot.event
@@ -84,6 +79,30 @@ async def on_ready():
 async def on_resumed():
     log.info("resumed.")
 
+@bot.event
+async def on_application_command_error(ctx, error: Exception):
+    if isinstance(error, commands.CommandNotFound):
+        return f'error'
+
+    elif isinstance(error, (commands.UserInputError, commands.NoPrivateMessage, ValueError)):
+        return await ctx.send(
+            f"Error: {str(error)}\nUse `{ctx.prefix}help " + ctx.command.qualified_name + "` for help."
+        )
+    elif isinstance(error, commands.CheckFailure):
+        msg = str(error) or "You are not allowed to run this command."
+        return await ctx.send(f"Error: {msg}")
+
+    elif isinstance(error, commands.CommandOnCooldown):
+        return await ctx.send("This command is on cooldown for {:.1f} seconds.".format(error.retry_after))
+
+    elif isinstance(error, commands.MaxConcurrencyReached):
+        return await ctx.send(str(error))
+
+    elif isinstance(error.__cause__, AttributeError):
+        return await ctx.respond(str(error))
+
+    else:
+        return await ctx.respond(str(error))
 
 faulthandler.enable()
 bot.state = "run"

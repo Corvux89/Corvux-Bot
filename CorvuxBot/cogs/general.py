@@ -3,11 +3,13 @@ import logging
 import discord.errors
 import discord.utils
 from os import listdir
-from discord.commands import Option
+
+from discord import ApplicationContext
+from discord.commands import Option, SlashCommandGroup
 from discord.ext import commands
-from discord.ext.commands import Context
 from CorvuxBot.bot import CorvuxBot
-from CorvuxBot.helpers import *
+from CorvuxBot.helpers import load, unload, is_admin
+from CorvuxBot.constants import *
 
 log = logging.getLogger(__name__)
 
@@ -23,63 +25,52 @@ class General(commands.Cog):
         self.bot = bot
         log.info(f'Cog \'general\' loaded')
 
-    # Auditing Setup
-    @staticmethod
-    async def cog_before_invoke(ctx: Context):  # Log commands being run to better tie them to errors
-        await cog_log(ctx, log)
+    admin = SlashCommandGroup(name="admin",
+                              description="Bot administrative commands",
+                              checks=[is_admin])
+
+    @admin.command(name="rubberduck")
+    async def test_command(self, ctx):
+        await ctx.respond("Yup")
 
     # Command: list
-    @commands.slash_command(name="list",
-                            description="Lists installed files for bot")
-    @commands.check(is_admin)
+    @admin.command(name="list",
+                   description="Lists installed files for bot")
     async def listCog(self, ctx):
-        if not is_admin(ctx):
-            await ctx.respond("Command for admin use only")
-            log.warning('failure')
-            return
-        else:
-            resp = []
-            for file_name in listdir(COGS_DIR):
-                if file_name.endswith('.py'):
-                    resp.append(f'{COGS_PATH}.{file_name}')
-            outputStr = "\n".join(resp)
-            await ctx.respond(outputStr)
+        resp = []
+        for file_name in listdir(COGS_DIR):
+            if file_name.endswith('.py'):
+                resp.append(f'{COGS_PATH}.{file_name}')
+        outputStr = "\n".join(resp)
+        await ctx.respond(outputStr)
 
     # Command: load
-    @commands.slash_command(name="load",
-                            description="Cog loader")
+    @admin.command(name="load",
+                   description="Cog loader")
     async def loadCog(self,
                       ctx: ApplicationContext,
                       ext: Option(str,
                                   "Cog to load",
                                   required=True,
                                   name="cog")):
-        if not is_admin(ctx):
-            await ctx.respond("Command for admin use only")
-            return
-        else:
-            passfail, resp = load(self, ext)
-            await ctx.respond(resp)
+        passfail, resp = load(self, ext)
+        await ctx.respond(resp)
 
     # Command: unload
-    @commands.slash_command(name="unload",
-                            description="Cog remover")
+    @admin.command(name="unload",
+                   description="Cog remover")
     async def unloadCog(self,
                         ctx: ApplicationContext,
                         ext: Option(str,
                                     "Cog to unload",
                                     required=True,
                                     name="cog")):
-        if not is_admin(ctx):
-            await ctx.respond("Command for admin use only")
-            return
-        else:
-            passfail, resp = unload(self, ext)
-            await ctx.respond(resp)
+        passfail, resp = unload(self, ext)
+        await ctx.respond(resp)
 
     # Command: reload
-    @commands.slash_command(name="reload",
-                            description="Reload cogs")
+    @admin.command(name="reload",
+                   description="Reload cogs")
     async def reloadCogs(self,
                          ctx: ApplicationContext,
                          ext: Option(str,
@@ -87,9 +78,6 @@ class General(commands.Cog):
                                      required=False,
                                      default="ALL",
                                      name="cog")):
-        if not is_admin(ctx):
-            await ctx.respond("Command for admin use only")
-            return
         if str(ext).upper() == 'ALL':
             responses = []
             for file_name in listdir(COGS_DIR):
@@ -106,8 +94,8 @@ class General(commands.Cog):
             await ctx.respond(f'```Reload Results: \n{outputStr}```')
 
     # Command: break
-    @commands.slash_command(name="break",
-                            description="Inserts a break")
+    @admin.command(name="break",
+                   description="Inserts a break")
     async def lineBreak(self,
                         ctx: ApplicationContext):
         await ctx.delete()
@@ -116,4 +104,3 @@ class General(commands.Cog):
                          value='\u200B',
                          inline=False)
         await ctx.respond(embed=lBreak)
-

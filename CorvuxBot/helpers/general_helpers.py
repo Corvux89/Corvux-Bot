@@ -1,7 +1,11 @@
+import logging
 from typing import List
 import discord.errors
-from discord import TextChannel, Bot, CategoryChannel, ApplicationContext
+from discord import TextChannel, Bot, CategoryChannel
 from CorvuxBot.constants import *
+
+
+log = logging.getLogger(__name__)
 
 
 def is_admin(ctx):
@@ -35,15 +39,3 @@ def get_excluded_channels(self, bot: Bot) -> List[TextChannel]:
     if category is not None:
         return EXCLUDED_CHANNElS.get(category.id)
     return []
-
-
-# TODO: Part of logging...but do better
-async def cog_log(ctx: ApplicationContext, log):  # Log commands being run to better tie them to errors
-    try:
-        log.info(
-            "cmd: chan {0.channel} ({0.channel.id}), serv: {0.guild} ({0.guild.id}),"
-            "auth: {0.user} ({0.user.id}): {0.command}".format(ctx)
-        )
-    except AttributeError:
-        log.info("Command in PM with {0.message.author} ({0.message.author.id}): {0.message.content}.".format(ctx))
-

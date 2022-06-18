@@ -1,14 +1,13 @@
 import logging
 import discord
 import time
-from discord import Option, Member, Embed
-from discord.ext.commands import Context
+from discord import Option, Member, Embed, ApplicationContext
 from CorvuxBot.bot import CorvuxBot
-from CorvuxBot.helpers import *
+from CorvuxBot.helpers import get_character_from_id, create_character
 from discord.ext import commands
 from CorvuxBot.models.embeds import ErrorEmbed, GetEmbed
-from CorvuxBot.models.characters import Character
 from CorvuxBot.category_ref import CharacterClass
+from CorvuxBot.models.characters import PlayerCharacter
 
 log = logging.getLogger(__name__)
 
@@ -23,10 +22,6 @@ class PlayerAdmin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         log.info(f'Cog \'player_admin\' loaded')
-
-    @staticmethod
-    async def cog_before_invoke(ctx: Context):
-        await cog_log(ctx, log)
 
     # Command: create
     @commands.slash_command(name="create",
@@ -53,18 +48,18 @@ class PlayerAdmin(commands.Cog):
 
         await ctx.response.defer(ephemeral=True)
 
-        if self.bot.characters.get_character_from_id(player.id) is not None:
+        if get_character_from_id(self.bot,player.id) is not None:
             log.error(f'Found existing character for {player.id}. Aborting.')
             await ctx.respond(
                 embed=ErrorEmbed(description=f'Player {player.mention} already has a character. Do something else.'),
                 ephemeral=True)
             return
         else:
-            new_character = Character(player.id,
-                                      name,
-                                      CharacterClass(character_class),
-                                      level)
-            self.bot.characters.create_character(new_character)
+            new_character = PlayerCharacter(player.id,
+                                            name,
+                                            CharacterClass(character_class),
+                                            level)
+            create_character(self.bot, new_character)
 
             embed = Embed(title=f'Character Created - {name}',
                           description=f'**Player:** {player.mention}\n'
@@ -94,7 +89,7 @@ class PlayerAdmin(commands.Cog):
 
         await ctx.response.defer()
 
-        if (character := self.bot.characters.get_character_from_id(player.id)) is None:
+        if (character := get_character_from_id(self.bot, player.id)) is None:
             log.error(f'No character information found for player [ {player.id} ]. Aborting.')
             await ctx.respond(embed=ErrorEmbed(description=f'No character information found for {player.mention}'),
                               ephemeral=True)
