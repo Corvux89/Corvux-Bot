@@ -17,8 +17,6 @@ class GSheetsClient(object):
         end = perf_counter()
         log.info(f'Time to load auth: {end - start}s')
 
-        # TODO: Do we really need to do this everytime we extend the client or can we just do it first time?
-
         # Open Workbook
         start = perf_counter()
         self.corvux_workbook = self.__auth.open_by_key(WORKBOOK_ID)

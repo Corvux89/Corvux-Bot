@@ -9,9 +9,6 @@ from CorvuxBot.constants import *
 from os import listdir
 from discord.ext import commands
 
-# TODO: SlashCommand Groups
-# TODO: Consolidate GSHEETS calls
-
 intents = discord.Intents(
     guilds=True,
     members=True,
@@ -44,7 +41,8 @@ bot = CorvuxBot(command_prefix=COMMAND_PREFIX,
                 description=desc,
                 activity=discord.Game(name=GAME_NAME,
                                       type=GAME_TYPE),
-                debug_guilds=DEBUG_GUILDS)
+                debug_guilds=DEBUG_GUILDS,
+                allowed_mentions=discord.AllowedMentions.none())
 
 for filename in listdir(COGS_DIR):
     if filename.endswith('.py'):
@@ -66,7 +64,6 @@ async def on_application_command(ctx):
     except AttributeError:
         log.info("Command in PM with {0.message.author} ({0.message.author.id}): {0.message.content}.".format(ctx))
 
-
 @bot.event
 async def on_ready():
     log.info("logged in as")
@@ -78,6 +75,11 @@ async def on_ready():
 @bot.event
 async def on_resumed():
     log.info("resumed.")
+
+@bot.event
+async def on_command_error(error, *args, **kwargs):
+    if isinstance(error, commands.CommandNotFound):
+        return f'error'
 
 @bot.event
 async def on_application_command_error(ctx, error: Exception):
