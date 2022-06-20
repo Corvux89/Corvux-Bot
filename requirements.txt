@@ -3,4 +3,4 @@ gspread==5.4.0
 SQLAlchemy==1.4.37
 discord==1.7.3
 pip-tools
-py-cord==1.7.3
+py-cord>=2.0.0.rc1
