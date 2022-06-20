@@ -7,6 +7,7 @@ TOKEN = os.environ['BOT_TOKEN']
 COGS_DIR = "CorvuxBot/cogs"
 COGS_PATH = "CorvuxBot.cogs"
 COMMAND_PREFIX = os.environ['COMMAND_PREFIX']  # Move to DB
+DATABASE_URL=os.environ['DATABASE_URL']
 DEBUG_GUILDS = [226741726943903754]
 #Move the following to a command structure and os.environ?...avtivity?
 GAME_NAME = "Doom on Kindle Paperwhite"

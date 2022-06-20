@@ -2,8 +2,6 @@ import faulthandler
 import logging
 import sys
 import discord
-
-
 from CorvuxBot.bot import CorvuxBot
 from CorvuxBot.constants import *
 from os import listdir
@@ -24,6 +22,7 @@ intents = discord.Intents(
     typing=False
 )
 
+
 log_formatter = logging.Formatter("%(asctime)s %(name)s: %(message)s")
 handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(log_formatter)
@@ -34,7 +33,7 @@ log = logging.getLogger("bot")
 
 desc = "I have no idea what I'm doing"
 
-bot = CorvuxBot(command_prefix=COMMAND_PREFIX,
+bot = CorvuxBot(command_prefix=commands.when_mentioned_or(COMMAND_PREFIX),
                 intents=intents,
                 case_insensitive=True,
                 help_command=None,
@@ -87,18 +86,18 @@ async def on_application_command_error(ctx, error: Exception):
         return f'error'
 
     elif isinstance(error, (commands.UserInputError, commands.NoPrivateMessage, ValueError)):
-        return await ctx.send(
+        return await ctx.respond(
             f"Error: {str(error)}\nUse `{ctx.prefix}help " + ctx.command.qualified_name + "` for help."
         )
     elif isinstance(error, commands.CheckFailure):
         msg = str(error) or "You are not allowed to run this command."
-        return await ctx.send(f"Error: {msg}")
+        return await ctx.respond(f"Error: {msg}")
 
     elif isinstance(error, commands.CommandOnCooldown):
-        return await ctx.send("This command is on cooldown for {:.1f} seconds.".format(error.retry_after))
+        return await ctx.respond("This command is on cooldown for {:.1f} seconds.".format(error.retry_after))
 
     elif isinstance(error, commands.MaxConcurrencyReached):
-        return await ctx.send(str(error))
+        return await ctx.respond(str(error))
 
     elif isinstance(error.__cause__, AttributeError):
         return await ctx.respond(str(error))

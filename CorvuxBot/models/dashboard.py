@@ -1,7 +1,12 @@
 import logging
 from time import perf_counter
 from typing import List, Dict, Any, Optional
+
+import sqlalchemy as sa
 from discord import CategoryChannel, Bot, Message, TextChannel
+from sqlalchemy import BigInteger, Column, TEXT
+from sqlalchemy.orm import declarative_base
+
 from CorvuxBot.sheets_client import GSheetsClient
 from itertools import zip_longest
 
@@ -21,10 +26,10 @@ class Dashboard(object):
     @classmethod
     def from_dict(cls,
                   dashboard_dict: Dict[str, Any]):
-        dashboard = cls(category_channel_id=int(dashboard_dict["category_channel_id"]),
-                        dashboard_post_channel_id=int(dashboard_dict["dashboard_post_channel_id"]),
-                        dashboard_post_id=int(dashboard_dict["dashboard_post_id"]),
-                        excluded_channel_ids=dashboard_dict["excluded_channel_ids"])
+        dashboard = cls(category_channel_id=int(dashboard_dict["Category Channel ID"]),
+                        dashboard_post_channel_id=int(dashboard_dict["Dashboard Post Channel ID"]),
+                        dashboard_post_id=int(dashboard_dict["Dashboard Post ID"]),
+                        excluded_channel_ids=dashboard_dict["Excluded Channels"].split("|"))
         return dashboard
 
     def get_category_channel(self, bot: Bot) -> CategoryChannel | None:
@@ -39,7 +44,11 @@ class Dashboard(object):
     def channels_to_check(self, bot: Bot) -> List[TextChannel]:
         category: CategoryChannel = bot.get_channel(self.category_channel_id)
         if category is not None:
-            return list(filter(lambda c: c.id not in self.excluded_channel_ids, category.text_channels))
+            return list(filter(lambda c: str(c.id) not in self.excluded_channel_ids, category.text_channels))
         return []
+
+
+db = declarative_base()
+metadata = sa.MetaData()
 
 

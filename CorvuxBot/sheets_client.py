@@ -25,9 +25,9 @@ class GSheetsClient(object):
 
         # Open sheets
         start = perf_counter()
+        self.guild_profile = self.corvux_workbook.worksheet("Guild Profiles")
         self.char_sheet = self.corvux_workbook.worksheet("Characters")
         self.dashboard_sheet = self.corvux_workbook.worksheet("Dashboard")
-        self.reactions_sheet = self.corvux_workbook.worksheet("Reactions and Roles")
         end = perf_counter()
         log.info(f'Time to load worksheets: {end - start}s')
 

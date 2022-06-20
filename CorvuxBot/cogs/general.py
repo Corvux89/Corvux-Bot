@@ -27,7 +27,8 @@ class General(commands.Cog):
 
     admin = SlashCommandGroup(name="admin",
                               description="Bot administrative commands",
-                              checks=[is_admin])
+                              checks=[is_admin],
+                              hidden=True)
 
     @admin.command(name="rubberduck")
     async def test_command(self, ctx):

@@ -34,8 +34,8 @@ def load(self, ext):
     return True, f'{ext} loaded.'
 
 
-def get_excluded_channels(self, bot: Bot) -> List[TextChannel]:
-    category: CategoryChannel = bot.get_channel(self.channel.category_id)
+def get_excluded_channels(self) -> List[TextChannel]:
+    category: CategoryChannel = self.bot.get_channel(self.channel.category_id)
     if category is not None:
         return EXCLUDED_CHANNElS.get(category.id)
     return []
