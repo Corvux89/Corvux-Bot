@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class GSheetsClient(object):
-    def __init__(self):
+    def  __init__(self):
         start = perf_counter()
         self.__auth = gspread.service_account_from_dict(json.loads(GOOGLE_SERVICE_ACCOUNT))
         end = perf_counter()

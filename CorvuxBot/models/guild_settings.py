@@ -6,3 +6,4 @@ class ServerSettings(object):
     guild_id: int
     admin_roles: Optional[List[int]] = None
 
+

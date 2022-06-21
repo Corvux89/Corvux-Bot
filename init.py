@@ -1,27 +1,20 @@
+import asyncio
 import faulthandler
 import logging
 import sys
 import discord
+from discord import Intents
+
 from CorvuxBot.bot import CorvuxBot
 from CorvuxBot.constants import *
 from os import listdir
 from discord.ext import commands
 
-intents = discord.Intents(
-    guilds=True,
-    members=True,
-    messages=True,
-    reactions=True,
-    bans=False,
-    emojis=False,
-    integrations=False,
-    webhooks=False,
-    invites=False,
-    voice_states=False,
-    presences=False,
-    typing=False
-)
-
+intents = Intents.default()
+intents.members = True
+intents.messages = True
+intents.reactions = True
+intents.guilds = True
 
 log_formatter = logging.Formatter("%(asctime)s %(name)s: %(message)s")
 handler = logging.StreamHandler(sys.stdout)
@@ -30,6 +23,9 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 log = logging.getLogger("bot")
+
+if sys.version_info >= (3, 8) and sys.platform.lower().startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 desc = "I have no idea what I'm doing"
 
@@ -53,6 +49,7 @@ for filename in listdir(COGS_DIR):
 async def ping(ctx):
     await ctx.respond(f'Pong. Latency is {round(bot.latency)}ms.')
 
+
 @bot.event
 async def on_application_command(ctx):
     try:
@@ -63,22 +60,17 @@ async def on_application_command(ctx):
     except AttributeError:
         log.info("Command in PM with {0.message.author} ({0.message.author.id}): {0.message.content}.".format(ctx))
 
-@bot.event
-async def on_ready():
-    log.info("logged in as")
-    log.info(bot.user.name)
-    log.info(bot.user.id)
-    log.info("-----")
-
 
 @bot.event
 async def on_resumed():
     log.info("resumed.")
 
+
 @bot.event
 async def on_command_error(error, *args, **kwargs):
     if isinstance(error, commands.CommandNotFound):
         return f'error'
+
 
 @bot.event
 async def on_application_command_error(ctx, error: Exception):
@@ -105,6 +97,10 @@ async def on_application_command_error(ctx, error: Exception):
     else:
         return await ctx.respond(str(error))
 
-faulthandler.enable()
-bot.state = "run"
+@bot.event
+async def close(self):
+    await super().close()
+    await self.bot.db.close()
+    await self.bot.db.logout()
+
 bot.run(TOKEN)

@@ -2,3 +2,6 @@ gspread==5.4.0
 SQLAlchemy==1.4.37
 pip-tools
 py-cord>=2.0.0.rc1
+marshmallow
+aiopg[sa]
+aiopg

@@ -1,51 +1,15 @@
 import logging
 from collections import defaultdict
-from itertools import zip_longest
-from typing import Optional
-
 import discord
-from discord import CategoryChannel
 from sqlalchemy.sql import FromClause
-
 from CorvuxBot.constants import *
-
-from CorvuxBot.models.dashboard import Dashboard
+from CorvuxBot.models.dashboard import Dashboard, dashboard_table, dashboard_schema
 from CorvuxBot.models.embeds import dashboard_embed
+import psycopg2
 
 log = logging.getLogger(__name__)
 
 
-def get_dashboard_by_channel_category_id(self, category_channel_id: int) -> Optional[Dashboard]:
-    if isinstance(category_channel_id, int):
-        category_channel_id = str(category_channel_id)
-
-    header_row = '1:1'
-    target_cell = self.sheet.dashboard_sheet.find(category_channel_id, in_column=1)
-    if not target_cell:
-        return None
-
-    dashboard_row = str(target_cell.row) + ":" + str(target_cell.row)
-    data = self.sheet.dashboard_sheet.batch_get([header_row, dashboard_row])
-
-    data_dict = dict(
-        zip_longest(data[0][0], data[1][0]) if len(data[0][0]) > len(data[1][0]) else zip(data[0][0], data[1][0]))
-    dashboard = Dashboard.from_dict(data_dict)
-    return Dashboard.from_dict(data_dict)
-
-
-async def create_dashboard(self, dashboard: Dashboard):
-    dashboard_data = [
-        str(dashboard.category_channel_id),
-        str(dashboard.dashboard_post_channel_id),
-        str(dashboard.dashboard_post_id),
-        "|".join(filter(None, (str(c) for c in dashboard.excluded_channel_ids)))
-    ]
-
-    log.info(f'Appending new dashboard to sheet with data {dashboard_data}')
-    self.sheet.dashboard_sheet.append_row(dashboard_data,
-                                          value_input_option='USER_ENTERED',
-                                          insert_data_option='INSERT_ROWS',
-                                          table_range='A2')
 
 
 async def update_dashboard(self, dashboard: Dashboard):
@@ -85,12 +49,43 @@ async def update_dashboard(self, dashboard: Dashboard):
     else:
         log.warning(f'Original message not found for msg id [{dashboard.dashboard_post_id}]')
 
+async def get_dashboard_by_channel_category_id(self, category_channel_id: int) -> Dashboard:
+    async with self.bot.db.acquire() as conn:
+        data = await conn.execute(get_dashboard_by_channel_category_id_from(category_channel_id))
+        row = await data.first()
 
-def dashboard_category_filter2(self, category:CategoryChannel) -> FromClause:
-    categories = c
+    if row is None:
+        return None
 
-def dashboard_category_filter(self, category: CategoryChannel) -> bool:
-    categories = self.sheet.dashboard_sheet.col_values(1)
-    del categories[0]
+    dashboard: Dashboard = dashboard_schema().load(row)
 
-    return str(category.id) in categories
+    return dashboard
+
+
+
+
+
+# Queries
+def get_dashboard_by_channel_category_id_from(category_channel_id: int) -> FromClause:
+    return dashboard_table.select().where(
+        dashboard_table.c.category_channel_id == category_channel_id
+    )
+
+
+def insert_new_dashboard(dashboard: Dashboard):
+    return dashboard_table.insert().values(
+        category_channel_id=dashboard.category_channel_id,
+        dashboard_post_channel_id=dashboard.dashboard_post_channel_id,
+        dashboard_post_id=dashboard.dashboard_post_id,
+        excluded_channel_ids=dashboard.excluded_channel_ids
+    )
+
+
+def get_all_dashboards() -> FromClause:
+    return dashboard_table.select()
+
+
+def update_excluded_channels(dashboard: Dashboard):
+    return dashboard_table.update() \
+        .where(dashboard_table.c.category_channel_id == dashboard.category_channel_id) \
+        .values(excluded_channel_ids=dashboard.excluded_channel_ids)

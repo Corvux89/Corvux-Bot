@@ -1,4 +1,5 @@
 import os
+# https://discord.com/api/oauth2/authorize?client_id=984169379535142935&permissions=544857390288&scope=applications.commands%20bot
 
 # TODO: Make a lot of these loadable/outside constants; Need to change DB from GSheets to an actual DB for this;
 
@@ -11,6 +12,8 @@ DEBUG_GUILDS = [226741726943903754]
 GAME_NAME = "Doom on Kindle Paperwhite"
 GAME_TYPE = "gaming"
 
+#Database:
+DATABASE_URL = os.environ['DATABASE_URL']
 
 # Google Sheets
 GOOGLE_SERVICE_ACCOUNT = os.environ['GOOGLE_KEY_JSON']

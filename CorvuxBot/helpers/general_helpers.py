@@ -32,10 +32,3 @@ def load(self, ext):
     except discord.errors.ExtensionNotFound:
         return False, f'{ext} not found.'
     return True, f'{ext} loaded.'
-
-
-def get_excluded_channels(self) -> List[TextChannel]:
-    category: CategoryChannel = self.bot.get_channel(self.channel.category_id)
-    if category is not None:
-        return EXCLUDED_CHANNElS.get(category.id)
-    return []

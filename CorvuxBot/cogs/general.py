@@ -4,11 +4,11 @@ import discord.errors
 import discord.utils
 from os import listdir
 
-from discord import ApplicationContext
+from discord import ApplicationContext, BaseActivity
 from discord.commands import Option, SlashCommandGroup
 from discord.ext import commands
 from CorvuxBot.bot import CorvuxBot
-from CorvuxBot.helpers import load, unload, is_admin
+from CorvuxBot.helpers import load, unload, is_admin, insert_new_test
 from CorvuxBot.constants import *
 
 log = logging.getLogger(__name__)
@@ -28,10 +28,11 @@ class General(commands.Cog):
     admin = SlashCommandGroup(name="admin",
                               description="Bot administrative commands",
                               checks=[is_admin],
-                              hidden=True)
+                              hidden=False)
 
     @admin.command(name="rubberduck")
-    async def test_command(self, ctx):
+    async def test_command(self,
+                           ctx: ApplicationContext):
         await ctx.respond("Yup")
 
     # Command: list
@@ -95,13 +96,41 @@ class General(commands.Cog):
             await ctx.respond(f'```Reload Results: \n{outputStr}```')
 
     # Command: break
-    @admin.command(name="break",
+    @admin.command(name="insert",
                    description="Inserts a break")
     async def lineBreak(self,
-                        ctx: ApplicationContext):
-        await ctx.delete()
-        lBreak = discord.Embed()
-        lBreak.add_field(name=discord.utils.escape_markdown('___________________________________________'),
-                         value='\u200B',
-                         inline=False)
-        await ctx.respond(embed=lBreak)
+                        ctx: ApplicationContext,
+                        name: Option(str,
+                                     description="Something",
+                                     name="name",
+                                     required=True)):
+        await ctx.defer()
+        async with self.bot.db.acquire() as conn:
+            await conn.execute(insert_new_test(name))
+
+        await ctx.respond("coool cool cool cool")
+
+    # Command: chanSay
+    @admin.command(name="chan_say",
+                   description="Low-Level send message")
+    async def chanSay(self,
+                      ctx: ApplicationContext,
+                      channel,
+                      message: str):
+        await self.bot.http.send_message(int(channel), message)
+        await ctx.respond("Message sent")
+
+    # Command: change_presence
+    @admin.command(name="change_game_presence",
+                   description="Change bot presence")
+    async def change_game_presence(self,
+                                   ctx: ApplicationContext,
+                                   activity: Option(str,
+                                                    "Activity",
+                                                    default=None),
+                                   status: Option(str,
+                                                  "Status",
+                                                  default="Online")):
+        game = discord.Game(activity)
+        await self.bot.change_presence(activity=game, status=status)
+        await ctx.respond("Done", ephemeral=True)
